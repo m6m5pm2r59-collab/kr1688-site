@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pet Supplies — KR1688</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:#f7f7f7;color:#333}
+.header{background:#1a1a2e;padding:16px 24px;display:flex;justify-content:space-between;align-items:center}
+.header a{color:#e94560;text-decoration:none;font-weight:700;font-size:20px}
+.header .back{color:#aaa;font-size:14px}
+.hero{background:linear-gradient(135deg,#1a1a2e,#16213e);color:#fff;padding:48px 24px;text-align:center}
+.hero h1{font-size:2.2rem;margin-bottom:12px}
+.hero p{color:#8892b0;font-size:1.1rem;max-width:600px;margin:0 auto}
+.container{max-width:1100px;margin:0 auto;padding:24px 16px}
+.cat-nav{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:32px}
+.cat-nav button{background:#fff;border:1px solid #ddd;border-radius:24px;padding:8px 20px;font-size:14px;cursor:pointer;transition:all .2s}
+.cat-nav button:hover,.cat-nav button.active{background:#e94560;color:#fff;border-color:#e94560}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:20px}
+.product-card{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06);transition:transform .2s,box-shadow .2s}
+.product-card:hover{transform:translateY(-4px);box-shadow:0 8px 24px rgba(0,0,0,0.12)}
+.product-img{height:180px;background:linear-gradient(135deg,#f0f0f0,#e8e8e8);display:flex;align-items:center;justify-content:center;font-size:48px}
+.product-cat{font-size:11px;color:#e94560;text-transform:uppercase;letter-spacing:.5px;padding:12px 16px 0;font-weight:600}
+.product-name{font-size:15px;color:#333;padding:8px 16px;line-height:1.4;min-height:64px}
+.product-price{font-size:20px;font-weight:700;color:#e94560;padding:0 16px 4px}
+.product-moq{font-size:12px;color:#999;padding:0 16px 8px}
+.btn-quote{display:block;text-align:center;background:#e94560;color:#fff;text-decoration:none;padding:10px;margin:8px 16px 16px;border-radius:8px;font-size:14px;font-weight:600;transition:background .2s}
+.btn-quote:hover{background:#c23152}
+.footer{text-align:center;padding:48px 16px;color:#999;font-size:13px}
+@media(max-width:600px){.hero h1{font-size:1.5rem}.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="header"><a href="index.html">KR1688</a><span class="back">B2B Sourcing from China</span></div>
+<div class="hero">
+    <h1>Pet Supplies</h1>
+    <p>Direct from China's top factories. Dropshipping available. Low MOQ. We inspect every order before shipping.</p>
+</div>
+<div class="container">
+    <div class="cat-nav">
+        <button class="active" onclick="filter('all')">All</button>
+        <button onclick="filter('Pet Toys')">Pet Toys</button>
+        <button onclick="filter('Feeders & Dispensers')">Feeders & Dispensers</button>
+        <button onclick="filter('Carriers & Travel')">Carriers & Travel</button>
+        <button onclick="filter('Collars & Leashes')">Collars & Leashes</button>
+        <button onclick="filter('Grooming')">Grooming</button>
+    </div>
+    <div class="grid" id="productGrid">
+
+    <div class="product-card">
+        <div class="product-img"><span>🐾</span></div>
+        <div class="product-cat">Pet Toys</div>
+        <h3 class="product-name">Catnip Chew Toy with Silvervine & Mint Ball</h3>
+        <div class="product-price">$1.50 - $3.00</div>
+        <div class="product-moq">MOQ: 2 pcs</div>
+        <a href="mailto:hello@kr1688.com?subject=Quote: Catnip Chew Toy" class="btn-quote">Get a Quote</a>
+    </div>
+
+    <div class="product-card">
+        <div class="product-img"><span>🐾</span></div>
+        <div class="product-cat">Pet Toys</div>
+        <h3 class="product-name">Silicone Dog Chew Toy with Suction Cup</h3>
+        <div class="product-price">$3.00 - $5.00</div>
+        <div class="product-moq">MOQ: 2 pcs</div>
+        <a href="mailto:hello@kr1688.com?subject=Quote: Silicone Dog Chew Toy" class="btn-quote">Get a Quote</a>
+    </div>
+
+    <div class="product-card">
+        <div class="product-img"><span>🐾</span></div>
+        <div class="product-cat">Pet Toys</div>
+        <h3 class="product-name">Cat Scratcher Board - Corrugated Pad</h3>
+        <div class="product-price">$2.00 - $4.00</div>
+        <div class="product-moq">MOQ: 2 pcs</div>
+        <a href="mailto:hello@kr1688.com?subject=Quote: Cat Scratcher Board" class="btn-quote">Get a Quote</a>
+    </div>
+
+    <div class="product-card">
+        <div class="product-img"><span>🐾</span></div>
+        <div class="product-cat">Feeders &amp; Dispensers</div>
+        <h3 class="product-name">Stainless Steel Pet Bowl &amp; Water Dispenser Set</h3>
+        <div class="product-price">$4.00 - $8.00</div>
+        <div class="product-moq">MOQ: 2 pcs</div>
+        <a href="mailto:hello@kr1688.com?subject=Quote: Stainless Steel Pet Bowl" class="btn-quote">Get a Quote</a>
+    </div>
+
+    <div class="product-card">
+        <div class="product-img"><span>🐾</span></div>
+        <div class="product-cat">Feeders &amp; Dispensers</div>
+        <h3 class="product-name">Anti-tip Double Bowl Feeder for Cats &amp; Dogs</h3>
+        <div class="product-price">$2.00 - $4.00</div>
+        <div class="product-moq">MOQ: 2 pcs</div>
+        <a href="mailto:hello@kr1688.com?subject=Quote: Double Bowl Feeder" class="btn-quote">Get a Quote</a>
+    </div>
+
+    <div class="product-card">
+        <div class="product-img"><span>🐾</span></div>
+        <div class="product-cat">Feeders &amp; Dispensers</div>
+        <h3 class="product-name">Portable Foldable Dog Travel Water Bottle</h3>
+        <div class="product-price">$8.00 - $15.00</div>
+        <div class="product-moq">MOQ: 2 pcs</div>
+        <a href="mailto:hello@kr1688.com?subject=Quote: Travel Water Bottle" class="btn-quote">Get a Quote</a>
+    </div>
+
+    <div class="product-card">
+        <div class="product-img"><span>🐾</span></div>
+        <div class="product-cat">Carriers &amp; Travel</div>
+        <h3 class="product-name">4-Wheel Pet Stroller with Storage Bag</h3>
+        <div class="product-price">$25.00 - $45.00</div>
+        <div class="product-moq">MOQ: 1 pc</div>
+        <a href="mailto:hello@kr1688.com?subject=Quote: Pet Stroller" class="btn-quote">Get a Quote</a>
+    </div>
+
+    <div class="product-card">
+        <div class="product-img"><span>🐾</span></div>
+        <div class="product-cat">Carriers &amp; Travel</div>
+        <h3 class="product-name">Washable Pet Sleeping Mat - Cat House &amp; Dog Cushion</h3>
+        <div class="product-price">$8.00 - $18.00</div>
+        <div class="product-moq">MOQ: 2 pcs</div>
+        <a href="mailto:hello@kr1688.com?subject=Quote: Pet Sleeping Mat" class="btn-quote">Get a Quote</a>
+    </div>
+
+    <div class="product-card">
+        <div class="product-img"><span>🐾</span></div>
+        <div class="product-cat">Carriers &amp; Travel</div>
+        <h3 class="product-name">Rattan Cooling Pet Bed Mat - 4 Seasons</h3>
+        <div class="product-price">$6.00 - $12.00</div>
+        <div class="product-moq">MOQ: 2 pcs</div>
+        <a href="mailto:hello@kr1688.com?subject=Quote: Cooling Pet Bed Mat" class="btn-quote">Get a Quote</a>
+    </div>
+
+    <div class="product-card">
+        <div class="product-img"><span>🐾</span></div>
+        <div class="product-cat">Collars &amp; Leashes</div>
+        <h3 class="product-name">No-pull Dog Harness &amp; Leash Set - Adjustable</h3>
+        <div class="product-price">$5.00 - $10.00</div>
+        <div class="product-moq">MOQ: 2 pcs</div>
+        <a href="mailto:hello@kr1688.com?subject=Quote: Dog Harness Set" class="btn-quote">Get a Quote</a>
+    </div>
+
+    <div class="product-card">
+        <div class="product-img"><span>🐾</span></div>
+        <div class="product-cat">Collars &amp; Leashes</div>
+        <h3 class="product-name">Anti-bite Metal Chain Leash - Heavy Duty</h3>
+        <div class="product-price">$6.00 - $12.00</div>
+        <div class="product-moq">MOQ: 2 pcs</div>
+        <a href="mailto:hello@kr1688.com?subject=Quote: Metal Chain Leash" class="btn-quote">Get a Quote</a>
+    </div>
+
+    <div class="product-card">
+        <div class="product-img"><span>🐾</span></div>
+        <div class="product-cat">Collars &amp; Leashes</div>
+        <h3 class="product-name">Dual-function P-rope Dog Leash</h3>
+        <div class="product-price">$6.00 - $10.00</div>
+        <div class="product-moq">MOQ: 2 pcs</div>
+        <a href="mailto:hello@kr1688.com?subject=Quote: P-rope Dog Leash" class="btn-quote">Get a Quote</a>
+    </div>
+
+    <div class="product-card">
+        <div class="product-img"><span>🐾</span></div>
+        <div class="product-cat">Grooming</div>
+        <h3 class="product-name">Waterless Pet Grooming Gloves - OEM</h3>
+        <div class="product-price">$5.00 - $9.00</div>
+        <div class="product-moq">MOQ: 2 pcs</div>
+        <a href="mailto:hello@kr1688.com?subject=Quote: Grooming Gloves" class="btn-quote">Get a Quote</a>
+    </div>
+
+    <div class="product-card">
+        <div class="product-img"><span>🐾</span></div>
+        <div class="product-cat">Grooming</div>
+        <h3 class="product-name">Pet Deshedding Brush - Self-Cleaning</h3>
+        <div class="product-price">$4.00 - $7.00</div>
+        <div class="product-moq">MOQ: 2 pcs</div>
+        <a href="mailto:hello@kr1688.com?subject=Quote: Deshedding Brush" class="btn-quote">Get a Quote</a>
+    </div>
+
+    <div class="product-card">
+        <div class="product-img"><span>🐾</span></div>
+        <div class="product-cat">Grooming</div>
+        <h3 class="product-name">Pet Grooming Scissors Set - Straight &amp; Curved</h3>
+        <div class="product-price">$4.00 - $8.00</div>
+        <div class="product-moq">MOQ: 2 pcs</div>
+        <a href="mailto:hello@kr1688.com?subject=Quote: Grooming Scissors" class="btn-quote">Get a Quote</a>
+    </div>
+
+    <div class="product-card">
+        <div class="product-img"><span>🐾</span></div>
+        <div class="product-cat">Grooming</div>
+        <h3 class="product-name">Stainless Steel Litter Box - Splash-proof</h3>
+        <div class="product-price">$35.00 - $55.00</div>
+        <div class="product-moq">MOQ: 2 pcs</div>
+        <a href="mailto:hello@kr1688.com?subject=Quote: Stainless Litter Box" class="btn-quote">Get a Quote</a>
+    </div>
+
+    </div>
+</div>
+<div class="footer">
+    <p>KR1688 — Your Bridge to Chinese Manufacturers</p>
+    <p>hello@kr1688.com &nbsp;|&nbsp; PayPal Secure Payment &nbsp;|&nbsp; Escrow Accepted</p>
+</div>
+<script>
+function filter(cat) {
+    var btns = document.querySelectorAll('.cat-nav button');
+    for (var i = 0; i < btns.length; i++) { btns[i].classList.remove('active'); }
+    event.target.classList.add('active');
+    var cards = document.querySelectorAll('.product-card');
+    for (var j = 0; j < cards.length; j++) {
+        var card = cards[j];
+        if (cat === 'all' || card.querySelector('.product-cat').textContent === cat) {
+            card.style.display = '';
+        } else {
+            card.style.display = 'none';
+        }
+    }
+}
+</script>
+</body>
+</html>

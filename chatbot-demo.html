@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KR1688 AI 챗봇 데모</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#f0f0f5;font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px}
+
+/* Chat Bubble */
+.chat-trigger{position:fixed;bottom:24px;right:24px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#e94560,#c23152);color:#fff;border:none;cursor:pointer;box-shadow:0 4px 16px rgba(233,69,96,0.4);font-size:24px;display:flex;align-items:center;justify-content:center;z-index:999;transition:transform .2s}
+.chat-trigger:hover{transform:scale(1.08)}
+
+/* Chat Panel */
+.chat-panel{position:fixed;bottom:96px;right:24px;width:380px;max-height:520px;background:#fff;border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,0.12);display:none;flex-direction:column;z-index:998;overflow:hidden}
+.chat-panel.open{display:flex}
+
+.chat-header{background:linear-gradient(135deg,#1a1a2e,#16213e);color:#fff;padding:16px 20px;display:flex;align-items:center;gap:12px}
+.chat-header .avatar{width:40px;height:40px;border-radius:50%;background:#e94560;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px}
+.chat-header .info h3{font-size:15px;margin:0;line-height:1.2}
+.chat-header .info span{font-size:11px;color:#8892b0}
+.chat-header .close{background:none;border:none;color:#8892b0;font-size:20px;cursor:pointer;margin-left:auto}
+
+.chat-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;max-height:320px}
+.chat-messages .msg{max-width:85%;padding:10px 14px;border-radius:14px;font-size:13px;line-height:1.5;word-break:break-word}
+.chat-messages .msg.bot{background:#f4f4f8;color:#333;align-self:flex-start;border-bottom-left-radius:4px}
+.chat-messages .msg.user{background:linear-gradient(135deg,#e94560,#c23152);color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+.chat-messages .msg.bot .time{font-size:10px;color:#999;margin-top:4px}
+
+.quick-actions{display:flex;flex-wrap:wrap;gap:6px;padding:0 16px 8px}
+.quick-actions button{background:#f4f4f8;border:1px solid #e0e0e8;padding:6px 12px;border-radius:20px;font-size:12px;cursor:pointer;color:#444;white-space:nowrap}
+.quick-actions button:hover{background:#e94560;color:#fff;border-color:#e94560}
+
+.chat-input{padding:12px 16px;border-top:1px solid #eee;display:flex;gap:8px}
+.chat-input input{flex:1;padding:10px 14px;border:1px solid #e0e0e8;border-radius:24px;font-size:13px;outline:none}
+.chat-input input:focus{border-color:#e94560}
+.chat-input button{background:#e94560;color:#fff;border:none;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center}
+
+.typing-indicator{padding:10px 14px;background:#f4f4f8;border-radius:14px;align-self:flex-start;display:flex;gap:4px}
+.typing-indicator span{width:6px;height:6px;border-radius:50%;background:#ccc;animation:typing 1.4s infinite}
+.typing-indicator span:nth-child(2){animation-delay:.2s}
+.typing-indicator span:nth-child(3){animation-delay:.4s}
+@keyframes typing{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-4px)}}
+
+/* Demo notebar */
+.demo-note{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:10px 24px;border-radius:20px;font-size:13px;z-index:50}
+</style>
+</head>
+<body>
+
+<div class="demo-note">오른쪽 하단 채팅 아이콘을 클릭하세요 → Click the chat icon ↓</div>
+
+<button class="chat-trigger" id="chatTrigger" onclick="toggleChat()" aria-label="채팅 열기">💬</button>
+
+<div class="chat-panel open" id="chatPanel">
+    <!-- Header -->
+    <div class="chat-header">
+        <div class="avatar">KR</div>
+        <div class="info">
+            <h3>KR1688 상담봇</h3>
+            <span>24시간 온라인 · 평균 응답 10초</span>
+        </div>
+        <button class="close" onclick="toggleChat()">✕</button>
+    </div>
+
+    <!-- Messages -->
+    <div class="chat-messages" id="chatMessages">
+        <div class="msg bot">
+            안녕하세요! KR1688입니다 👋<br>
+            중국 1688 구매대행에 대해 무엇이든 물어보세요.
+            <div class="time">방금 전</div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions" id="quickActions">
+        <button onclick="sendQuick('견적은 어떻게 받나요?')">💰 견적 문의</button>
+        <button onclick="sendQuick('최소 주문 수량은 얼마인가요?')">📦 최소 수량</button>
+        <button onclick="sendQuick('한국까지 배송 기간은?')">🚢 배송 기간</button>
+        <button onclick="sendQuick('PayPal 결제 되나요?')">💳 결제 방법</button>
+        <button onclick="sendQuick('제품 검수는 어떻게 하나요?')">✅ 제품 검수</button>
+        <button onclick="sendQuick('반품/환불 규정은?')">🔄 반품 정책</button>
+    </div>
+
+    <!-- Input -->
+    <div class="chat-input">
+        <input type="text" id="chatInput" placeholder="메시지를 입력하세요..." onkeypress="if(event.key==='Enter')sendMessage()">
+        <button onclick="sendMessage()">➤</button>
+    </div>
+</div>
+
+<script>
+// Toggle chat panel
+function toggleChat() {
+    document.getElementById('chatPanel').classList.toggle('open');
+    document.getElementById('chatTrigger').style.display = 
+        document.getElementById('chatPanel').classList.contains('open') ? 'none' : 'flex';
+}
+
+// FAQ auto-reply engine
+const faqMap = {
+    '견적': '견적을 받으시려면 구매 원하시는 1688 상품 링크나 제품명을 보내주세요.\n\n저희가 공급업체에 직접 연락하여 최적의 가격을 안내해 드리며, 서비스 수수료 10-15%가 포함된 올인원 견적서를 보내드립니다.\n\n견적은 보통 24시간 이내에 회신됩니다.',
+    '최소': '최소 주문 수량은 상품마다 다르지만, KR1688은 소량 주문도 환영합니다.\n\n대부분의 1688 공급업체는 2-5개부터 주문 가능하며, 최소 주문 금액은 $100부터입니다.\n\n소량으로 테스트 후 대량 발주하시는 것도 가능합니다.',
+    '배송': '인천까지의 배송 기간입니다:\n\n• 특송(DHL/UPS/FedEx): 3-5일\n• 항공 화물: 5-7일\n• 해상 화물: 2-3일 (칭다오/웨이하이 → 인천 구간 초단거리)\n\n중국과 한국 간 해상 운송이 매우 빠른 것이 큰 장점입니다!',
+    '결제': 'PayPal, Wise, Payoneer로 결제 가능합니다.\n\nPayPal 구매자 보호 프로그램으로 결제 금액이 안전하게 보호되며, 검수 확인 후에만 결제가 완료됩니다.\n\n송금 수수료는 구매자 부담입니다.',
+    '검수': '모든 주문은 중국 발송 전 저희 검수 센터에서 꼼꼼히 확인합니다:\n\n• 제품 수량 정확성 확인\n• 외관 및 포장 상태 검사\n• 전자제품의 경우 작동 테스트\n• 검수 사진을 보내드려 승인 후 발송\n\n불량이 발견되면 공급업체와 교환/환불 협의 후 재검수합니다.',
+    '반품': '검수 단계에서 불량이 발견되면 무료로 교환 또는 환불 처리됩니다.\n\n배송 중 파손의 경우 운송사에 클레임을 제기하며, 포장 상태를 사진으로 기록하고 있으므로 신속하게 처리됩니다.\n\n단, 단순 변심에 의한 반품은 왕복 배송비가 부과될 수 있습니다.',
+    '수수료': 'KR1688의 서비스 수수료는 상품 원가의 10-15%입니다.\n\n이 수수료에는 공급업체 협상, 제품 검수, 수출 서류 작업, 물류 코디네이션이 모두 포함됩니다. 배송비는 별도 실비 청구.\n\n예: 상품가 $100 + 수수료 $15 = 총 $115 (배송비 제외)'
+};
+
+function sendMessage() {
+    const input = document.getElementById('chatInput');
+    const text = input.value.trim();
+    if (!text) return;
+    input.value = '';
+    addMessage(text, 'user');
+    getBotReply(text);
+}
+
+function sendQuick(text) {
+    addMessage(text, 'user');
+    getBotReply(text);
+}
+
+function addMessage(text, sender) {
+    const container = document.getElementById('chatMessages');
+    const div = document.createElement('div');
+    div.className = 'msg ' + sender;
+    div.textContent = text;
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+}
+
+function getBotReply(userText) {
+    // Show typing
+    const container = document.getElementById('chatMessages');
+    const typing = document.createElement('div');
+    typing.className = 'typing-indicator';
+    typing.innerHTML = '<span></span><span></span><span></span>';
+    container.appendChild(typing);
+    container.scrollTop = container.scrollHeight;
+
+    setTimeout(() => {
+        typing.remove();
+        // FAQ matching
+        let reply = '';
+        for (const [kw, answer] of Object.entries(faqMap)) {
+            if (userText.includes(kw)) {
+                reply = answer;
+                break;
+            }
+        }
+        if (!reply) {
+            reply = '더 자세한 상담을 원하시면 아래 이메일 또는 카카오톡으로 연락 주세요.\n\n📧 hello@kr1688.com\n💬 카카오톡: KR1688\n\n또는 오른쪽 하단 채팅을 통해 실시간 상담 예약도 가능합니다.';
+        }
+        addMessage(reply, 'bot');
+    }, 800 + Math.random() * 800);
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KR1688 AI 상담봇 — Agnes API</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#fafafa;font-family:"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;line-height:1.6;color:#333;padding:40px;max-width:1000px;margin:0 auto}
+
+.ai-assistant{position:fixed;right:0;top:50%;transform:translateY(-50%);z-index:9999}
+.ai-mini{width:48px;height:120px;border-radius:12px 0 0 12px;background:#ff6a00;box-shadow:0 2px 12px rgba(255,106,0,0.3);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:transform .2s,box-shadow .2s;padding:8px 0}
+.ai-mini:hover{transform:translateX(-2px) scale(1.02);box-shadow:0 4px 20px rgba(255,106,0,0.4)}
+.ai-mini .avatar{width:32px;height:32px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;color:#ff6a00;font-size:12px;margin-bottom:6px}
+.ai-mini .label{color:#fff;font-size:10px;font-weight:600;letter-spacing:0.5px;text-align:center}
+
+.chat-panel{position:fixed;right:56px;top:50%;transform:translateY(-50%);width:400px;height:560px;background:#fff;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.15);display:none;flex-direction:column;overflow:hidden;border:1px solid #eee}
+.chat-panel.open{display:flex}
+
+.chat-header{background:linear-gradient(135deg,#ff6a00,#e55d00);color:#fff;padding:16px 20px;display:flex;align-items:center;gap:12px;flex-shrink:0}
+.chat-header .avatar{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px}
+.chat-header .info h3{font-size:15px;margin:2px 0;font-weight:600}
+.chat-header .info span{font-size:11px;color:#8892b0}
+.chat-header .close{background:none;border:none;color:#8892b0;font-size:20px;cursor:pointer;margin-left:auto;padding:0;width:24px;height:24px;display:flex;align-items:center;justify-content:center}
+.chat-header .close:hover{color:#fff}
+
+.chat-messages{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px;background:#f9f9fb}
+.chat-messages .msg{max-width:85%;padding:12px 16px;border-radius:18px;font-size:13px;line-height:1.5;word-break:break-word;white-space:pre-wrap}
+.chat-messages .msg.bot{background:#fff;color:#333;align-self:flex-start;border:1px solid #eaeaea;border-bottom-left-radius:6px}
+.chat-messages .msg.user{background:linear-gradient(135deg,#ff7a1a,#e55d00);color:#fff;align-self:flex-end;border-bottom-right-radius:6px}
+.chat-messages .msg.error{background:#fff3f3;color:#e55d00;align-self:flex-start;border:1px solid #ffd4d4;font-size:12px}
+
+.typing-indicator{padding:12px 16px;background:#fff;border:1px solid #eaeaea;border-radius:18px;align-self:flex-start;display:none;gap:4px}
+.typing-indicator.active{display:flex}
+.typing-indicator span{width:6px;height:6px;border-radius:50%;background:#ccc;animation:typing 1.4s infinite}
+.typing-indicator span:nth-child(2){animation-delay:.2s}
+.typing-indicator span:nth-child(3){animation-delay:.4s}
+@keyframes typing{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-4px)}}
+
+.chat-input{padding:16px 20px;border-top:1px solid #eee;display:flex;gap:10px;flex-shrink:0}
+.chat-input input{flex:1;padding:12px 16px;border:1px solid #ddd;border-radius:24px;font-size:13px;outline:none;transition:border .2s}
+.chat-input input:focus{border-color:#ff6a00}
+.chat-input input:disabled{background:#f5f5f5}
+.chat-input button{background:#ff6a00;color:#fff;border:none;width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:background .2s}
+.chat-input button:hover:not(:disabled){background:#e55d00}
+.chat-input button:disabled{opacity:.5;cursor:not-allowed}
+
+.email-bar{display:flex;align-items:center;gap:8px;padding:10px 20px;background:#fff8f5;border-top:1px solid #ffe0cc;border-bottom:1px solid #ffe0cc;font-size:12px;color:#888;flex-shrink:0}
+.email-bar .icon{font-size:14px}
+.email-bar a{color:#ff6a00;text-decoration:none;font-weight:600;font-size:12px}
+.email-bar a:hover{text-decoration:underline}
+.email-bar span{flex:1}
+
+/* Demo page */
+.demo-content{padding:40px;background:#fff;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.05);margin-bottom:40px}
+.demo-content h1{color:#1a1a2e;margin-bottom:8px}
+.demo-content .subtitle{color:#666;margin-bottom:24px}
+.status-bar{display:flex;align-items:center;gap:8px;margin-top:8px}
+.status-dot{width:8px;height:8px;border-radius:50%;background:#34d399}
+.status-dot.off{background:#f87171}
+.badge-row{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}
+.badge-row span{background:#f0f0f5;padding:4px 12px;border-radius:20px;font-size:12px;color:#666}
+</style>
+</head>
+<body>
+
+<div class="demo-content">
+    <h1>KR1688 AI 상담봇 — Agnes API</h1>
+    <p class="subtitle">1688 스타일 우측 플로팅 · Agnes-2.0-Flash 구동 · RAG 지식베이스 · 실시간 견적</p>
+    <div class="badge-row">
+        <span>무료 API</span><span>한국어 최적화</span><span>1M 토큰 컨텍스트</span><span>OpenAI 호환</span>
+    </div>
+    <div class="status-bar">
+        <div class="status-dot" id="statusDot"></div>
+        <span id="statusText" style="font-size:13px;color:#666">API 연결 확인 중...</span>
+    </div>
+    <p style="margin-top:20px;color:#888;font-size:13px">오른쪽 하단 AI 버튼 클릭 → 제품 / 견적 / 관세 / 물류 질문을 자연어로 입력하세요.</p>
+</div>
+
+<!-- Floating AI -->
+<div class="ai-assistant">
+    <div class="ai-mini" id="aiMini" onclick="toggleChat()">
+        <div class="avatar">KR</div>
+        <div class="label">KR1688</div>
+    </div>
+    <div class="chat-panel" id="chatPanel">
+        <div class="chat-header">
+            <div class="avatar">KR</div>
+            <div class="info">
+                <h3>KR1688 AI 상담봇</h3>
+                <span>Agnes-2.0-Flash · 24시간</span>
+            </div>
+            <button class="close" onclick="toggleChat()">&times;</button>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+            <div class="msg bot">안녕하세요! KR1688 AI 상담봇입니다.<br><br>20개 펫용품 DB + 실시간 견적 계산 + 관세/물류 상담을 자연어로 물어보세요.<br><br>예: "고양이 장난감 100개 인천까지 견적"</div>
+        </div>
+        <div class="typing-indicator" id="typing"><span></span><span></span><span></span></div>
+        <div class="email-bar">
+            <span class="icon">📧</span>
+            <span>문의 / 주문 / 견적</span>
+            <a href="mailto:hello@kr1688.com">hello@kr1688.com</a>
+        </div>
+        <div class="chat-input">
+            <input type="text" id="chatInput" placeholder="질문을 입력하세요..." onkeypress="if(event.key==='Enter')sendMessage()">
+            <button id="sendBtn" onclick="sendMessage()">&rarr;</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ============================================================
+// CONFIG
+// ============================================================
+const AGNES_BASE = 'https://apihub.agnes-ai.com/v1';
+const AGNES_KEY  = 'sk-qINSW4CYkLbq2MGwU8GBHqXpG7Lfo9Hu2lGEuB40jIYo0ARz';
+const MODEL      = 'agnes-2.0-flash';
+
+// ============================================================
+// RAG KNOWLEDGE BASE
+// ============================================================
+const SYSTEM_PROMPT = `당신은 KR1688의 AI 상담원입니다. KR1688은 한국 도매상/쇼핑몰 운영자가 중국 1688에서 펫용품을 구매대행하는 B2B 서비스입니다.
+
+## 역할
+- 한국어로만 응답하세요 (반드시 한국어).
+- 전문적이고 친절한 어조로, 핵심 정보를 먼저 제공한 후 상세 설명을 추가하세요.
+- 답변은 간결하고 정확하게, 불필요한 말은 하지 마세요.
+
+## 핵심 비즈니스 정보
+- 서비스: 1688 구매대행 (소싱 → 검수 → 배송 → 통관)
+- 수수료: 상품 원가의 15%
+- 결제: PayPal, Wise, Payoneer (PayPal 구매자 보호 적용)
+- 담당 지역: 한국 (인천항/부산항 통관)
+- 최소 주문: $100부터 가능 (소량 테스트 후 대량 발주 권장)
+
+## 제품 데이터베이스 (1688 가격)
+| ID | 제품명 | ¥ 가격 | MOQ |
+|----|--------|--------|-----|
+| 1 | 고양이 씹는 장난감 (캣닢) | 1.20 | 2개 |
+| 2 | 강아지 실리콘 씹는 장난감 | 7.00 | 2개 |
+| 3 | 고양이 스크래쳐 보드 | 3.10 | 2개 |
+| 4 | 스테인리스 펫 물병 | 10.00 | 2개 |
+| 5 | 펫 이중 그릇 (물+사료) | 2.18 | 2개 |
+| 6 | 강아지 휴대용 물병 | 19.50 | 2개 |
+| 7 | 4륜 펫 유모차 | 10.00 | 2개 |
+| 8 | 워셔블 펫 매트 | 19.90 | 2개 |
+| 9 | 라탄 쿨링 펫 침대 | 7.50 | 2개 |
+| 10 | 노풀 강아지 하네스 세트 | 5.25 | 2개 |
+| 11 | 쇠사슬 개줄 | 5.80 | 2개 |
+| 12 | P로프 강아지 목줄 | 12.30 | 2개 |
+| 13 | 워터리스 미용 장갑 | 6.90 | 500개 |
+| 14 | 반려동물 털제거 브러쉬 | 5.59 | 2개 |
+| 15 | 원클릭 셀프클리닝 브러쉬 | 3.31 | 2개 |
+| 16 | 스테인리스 벼룩 빗 | 0.90 | 2개 |
+| 17 | 펫 미용 가위 세트 | 3.04 | 2개 |
+| 18 | 강아지 기저귀 서스펜더 | 4.80 | 2개 |
+| 19 | 스테인리스 고양이 화장실 | 64.80 | 2개 |
+| 20 | 일회용 강아지 기저귀 | 6.20 | 2개 |
+
+## 견적 계산 공식 (사용자가 수량을 말하면 반드시 계산해주세요)
+- 상품가 = 개당1688가격 × 수량
+- 서비스 수수료 = 상품가 × 15%
+- 한국 관세 = 상품가 × 8% (HS Code 4201.00 기준, 펫용품)
+- 부가세 = (상품가 + 관세) × 10%
+- 인천 배송비: 10개 이하 $25, 11-50개 $25 + 개당 $1.5, 51개 이상 별도 문의
+- 총액 = 상품가 + 수수료 + 관세 + 부가세 + 배송비
+- 견적은 위 6개 항목을 각각 ¥(위안) 또는 $(달러)로 구분하여 표 형태로 출력하세요.
+
+## 물류 정보
+- 칭다오/웨이하이 → 인천 해상: 2~3일 (1CBM당 $120~150)
+- 항공 화물: 5~7일
+- DHL/UPS/FedEx 특송: 3~5일
+- 통관 소요: 1~2일 (서류 완비 시)
+
+## 한국 관세 정보
+- 펫용품 HS Code: 4201.00.0000 (동물용구)
+- 기본 관세율: 8%
+- 부가가치세: 10%
+- FTA 적용 시 일부 면제 가능 (원산지 증명서 필요)
+- $150 이하 개인 사용 물품은 관세 면제
+
+## 검수 프로세스
+1. 1688 공급업체 발주
+2. KR1688 검수센터 도착 → 개별 박스 개봉 검수
+3. 수량, 외관, 포장, 작동(전자제품) 확인
+4. 검수 사진 고객 전송 → 승인
+5. 불량 발생 시 공급업체와 무료 교환 협의
+6. 승인 후 국제 배송 진행
+
+## FAQ
+Q: 소량 주문 가능한가요?
+A: 네, $100부터 가능합니다. 2개 MOQ 제품이 대부분이므로 소량 테스트에 적합합니다.
+
+Q: OEM/커스텀 가능한가요?
+A: 네, 대량 발주 시 로고 각인, 패키지 커스터마이징 가능합니다. MOQ는 제품별 상이.
+
+Q: 배송 중 파손되면?
+A: 검수 단계에서 불량 발견 시 출고 전 교환. 배송 중 파손은 운송사 보험 클레임 진행.
+
+## 응답 규칙
+1. 사용자가 특정 제품을 언급하면 해당 제품의 1688 가격, MOQ, 카테고리를 먼저 말하세요.
+2. 사용자가 수량을 함께 말하면 반드시 위 공식으로 견적을 계산하여 보여주세요.
+3. 관세/물류 질문에는 위 데이터에 기반하여 정확하게 답변하세요.
+4. 질문과 무관한 내용이나 브랜드명이 나와도, KR1688의 역할 범위 내에서만 답변하세요.
+5. 모르는 내용은 "이 부분은 hello@kr1688.com 으로 문의해 주시면 담당자가 확인해 드리겠습니다" 라고 안내하세요.
+
+## 💰 가격 협상 전략 (당신이 직접 협상하세요 — 매우 중요)
+당신은 KR1688의 영업 담당자입니다. 가격 협상을 직접 수행하세요. 고객을 이메일로 보내지 말고, 당신이 현장에서 마무리하세요.
+
+### 가격 정책
+- 기본 수수료: 상품가의 15% (절대 깎지 마세요 — 이건 서비스 비용입니다)
+- 첫 주문 할인: 총액에서 5% 할인 가능 (첫 거래 고객에게만)
+- 대량 할인: 200개 이상 주문 시 총액에서 추가 3% 할인
+- 최대 할인폭: 첫 주문 할인 + 대량 할인 합산 최대 8% (그 이상은 불가)
+- 샘플 주문: 10개 이하 샘플은 수수료 15% 그대로 적용, 배송비 $25 청구
+
+### 협상 가이드라인
+1. 고객이 가격을 깎으려 할 때: "수수료 15%는 소싱+검수+재포장+통관대행이 포함된 서비스입니다"라고 단호하게 설명하세요.
+2. 그래도 깎으려 하면: 첫 주문 고객에게만 5% 할인 제안.
+3. 더 깎으려 하면: 200개 이상 주문 조건으로 추가 3% 제안.
+4. 그 이상 요구하면: "이 이상은 불가능합니다. 1688 공급 업체 가격 + 검수 + 물류를 고려하면 이 가격이 최선입니다."
+5. 경쟁사 언급 시: "저희는 개별 검수 + 불량 무료 교환 + 한국어 CS를 제공합니다. 단순 저가 대행과 다릅니다."
+
+### 협상 시 한국어 표현
+- "이 가격은 좀 비싸네요" → 할인 제안
+- "다른 업체는 더 싸던데요" → 서비스 차별점 설명
+- "생각해볼게요" → "지금 주문하시면 첫 주문 5% 할인 적용해 드립니다. 이 혜택은 이번 주까지입니다."
+- "샘플 먼저 받아볼 수 있나요?" → "네, 10개까지 샘플 주문 가능합니다. 샘플 견적을 바로 안내드릴까요?"
+
+## 📋 주문 확정 시 정보 수집 규칙
+협상이 성사되면(고객이 구매 의사를 명확히 밝히면) 아래 정보를 수집하세요:
+1. 이메일 주소
+2. 원하는 제품과 정확한 수량
+3. 한국 내 배송지 (도시까지만)
+4. 희망 배송 방식 (해상/항공/특송)
+
+수집 후 아래 형식으로 응답하세요:
+---
+✅ 주문 접수 완료! 아래 정보로 KR1688 운영팀이 **24시간 이내** kimpetshop@naver.com 으로 정식 견적서(PI)를 보내드립니다.
+
+- 제품: 고양이 스크래쳐 보드 × 300개
+- 제품가: ¥930.00 (약 ₩186,000)
+- 배송비: 부산항 해상운송 (별도 산정)
+- 주문 접수 이메일: kimpetshop@naver.com
+
+운영팀에서 확인 후 이메일로 정식 견적서와 결제 링크를 보내드릴 예정입니다. 감사합니다!
+---
+
+⚠️ 절대 "견적서를 보냈습니다" 또는 "이미 메일을 발송했습니다"라고 말하지 마세요. 당신은 정보를 수집하여 KR1688 운영팀에 전달하는 역할이고, 운영팀이 24시간 이내에 이메일을 보냅니다. "운영팀에서 확인 후 보내드립니다"라고만 말하세요.
+
+## 🔔 구매 의향 감지 및 이메일 전환 규칙 (매우 중요)
+사용자가 아래 키워드/의도를 보이면, 답변 마지막에 반드시 아래 CTA 문구를 추가하세요:
+
+## 🔔 구매 의향 감지 및 이메일 전환 규칙 (매우 중요)
+사용자가 아래 키워드/의도를 보이면, 답변 마지막에 반드시 아래 CTA 문구를 추가하세요:
+- "주문하고 싶다", "구매하려면", "결제", "계약", "PI", "Proforma Invoice", "대량", "컨테이너", "OEM", "커스텀", "장기", "정식 견적서", "샘플", "테스트 오더"
+- 견적 후 사용자가 가격에 대해 긍정적 반응을 보이거나 추가 질문을 하는 경우
+- 500개 이상 대량 문의
+
+📌 CTA 문구 (그대로 출력):
+---
+💡 보다 정확한 견적과 주문 진행을 원하시면 아래 이메일로 연락 주세요.  
+KR1688 운영팀이 24시간 이내 맞춤 견적서와 주문 가이드를 보내드립니다.
+
+📧 **hello@kr1688.com**
+---`;
+
+// ============================================================
+// AGNES API CLIENT
+// ============================================================
+let conversationHistory = [{ role: 'system', content: SYSTEM_PROMPT }];
+let isStreaming = false;
+
+async function checkApiStatus() {
+    try {
+        const res = await fetch(`${AGNES_BASE}/models`, {
+            headers: { 'Authorization': `Bearer ${AGNES_KEY}` }
+        });
+        const dot = document.getElementById('statusDot');
+        const txt = document.getElementById('statusText');
+        if (res.ok) {
+            dot.className = 'status-dot';
+            txt.textContent = 'Agnes-2.0-Flash 연결 정상';
+        } else {
+            dot.className = 'status-dot off';
+            txt.textContent = 'API 연결 실패: ' + res.status;
+        }
+    } catch (e) {
+        document.getElementById('statusDot').className = 'status-dot off';
+        document.getElementById('statusText').textContent = 'API 연결 불가: ' + e.message;
+    }
+}
+
+async function callAgnes(userMessage) {
+    conversationHistory.push({ role: 'user', content: userMessage });
+    // Keep context manageable
+    if (conversationHistory.length > 12) {
+        conversationHistory = [conversationHistory[0], ...conversationHistory.slice(-10)];
+    }
+    
+    const resp = await fetch(`${AGNES_BASE}/chat/completions`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${AGNES_KEY}`
+        },
+        body: JSON.stringify({
+            model: MODEL,
+            messages: conversationHistory,
+            temperature: 0.3,
+            max_tokens: 2048
+        })
+    });
+
+    if (!resp.ok) {
+        const err = await resp.text();
+        throw new Error(`Agnes API ${resp.status}: ${err.slice(0,200)}`);
+    }
+
+    const data = await resp.json();
+    const reply = data.choices[0].message.content;
+    conversationHistory.push({ role: 'assistant', content: reply });
+    return reply;
+}
+
+// ============================================================
+// UI
+// ============================================================
+function toggleChat() {
+    const panel = document.getElementById('chatPanel');
+    const mini = document.getElementById('aiMini');
+    panel.classList.toggle('open');
+    mini.style.display = panel.classList.contains('open') ? 'none' : 'flex';
+}
+
+function addMessage(text, sender) {
+    const container = document.getElementById('chatMessages');
+    const div = document.createElement('div');
+    div.className = 'msg ' + sender;
+    div.textContent = text;
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+    return div;
+}
+
+function setLoading(loading) {
+    isStreaming = loading;
+    document.getElementById('typing').classList.toggle('active', loading);
+    document.getElementById('chatInput').disabled = loading;
+    document.getElementById('sendBtn').disabled = loading;
+}
+
+async function sendMessage() {
+    if (isStreaming) return;
+    const input = document.getElementById('chatInput');
+    const text = input.value.trim();
+    if (!text) return;
+    
+    input.value = '';
+    addMessage(text, 'user');
+    setLoading(true);
+    
+    try {
+        const reply = await callAgnes(text);
+        addMessage(reply, 'bot');
+    } catch (e) {
+        addMessage('죄송합니다, 일시적인 오류가 발생했습니다.\n\n' + e.message + '\n\nhello@kr1688.com 으로 직접 문의해 주세요.', 'error');
+    } finally {
+        setLoading(false);
+    }
+}
+
+// Init
+checkApiStatus();
+setTimeout(() => { if (!document.getElementById('chatPanel').classList.contains('open')) toggleChat(); }, 1500);
+</script>
+</body>
+</html>
